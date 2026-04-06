@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "form.title": "Wprowadź klucz aplikacji",
       "form.key": "Klucz aplikacji",
       "form.submit": "Zatwierdź",
+      "footer.text": "© 2026 Signomix. Wszelkie prawa zastrzeżone.",
       "error.key": "Błędny klucz aplikacji lub problem z serwerem.",
       "error.network": "Wystąpił błąd podczas komunikacji z serwerem.",
       "error.dashboard": "Wystąpił błąd podczas ładowania dashboardu.",
@@ -23,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "form.title": "Enter application key",
       "form.key": "App Key",
       "form.submit": "Submit",
+      "footer.text": "© 2026 Signomix. All rights reserved.",
       "error.key": "Invalid application key or server problem.",
       "error.network":
         "Network error occurred while communicating with the server.",
