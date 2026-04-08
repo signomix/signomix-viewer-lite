@@ -1,6 +1,6 @@
 export const dictionary = {
   pl: {
-    "nav.title": "Signomix Viewer Lite",
+    "nav.title": "Signomix Viewer",
     "nav.select": "Wybierz pulpit",
     "nav.login": "Zaloguj się",
     "nav.help": "Pomoc",
@@ -32,7 +32,7 @@ export const dictionary = {
     `,
   },
   en: {
-    "nav.title": "Signomix Viewer Lite",
+    "nav.title": "Signomix Viewer",
     "nav.select": "Select dashboard",
     "nav.login": "Log in",
     "nav.help": "Help",

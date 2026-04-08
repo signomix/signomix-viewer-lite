@@ -3,11 +3,22 @@ import { checkAppKey, fetchDashboardsList, fetchDashboardHtml } from "./api.js";
 
 const appContainer = document.getElementById("app-container");
 
+const refreshPeriod = 30; // Czas odświeżania w sekundach
+let refreshIntervalId = null;
+
+function stopRefresh() {
+  if (refreshIntervalId) {
+    clearTimeout(refreshIntervalId);
+    refreshIntervalId = null;
+  }
+}
+
 /**
  * Wyświetla formularz logowania (wymaga podania appKey).
  * Opcjonalnie z komunikatem o błędzie.
  */
 export function showAppKeyForm(errorMessage = null) {
+  stopRefresh();
   appContainer.innerHTML = `
       <div class="row justify-content-center">
           <div class="col-md-6">
@@ -72,6 +83,7 @@ export function showAppKeyForm(errorMessage = null) {
  * Odpytuje API o wszystkie dostępne dla danego klucza pulpity.
  */
 export async function selectDashboardForm() {
+  stopRefresh();
   const appKey = localStorage.getItem("appKey");
 
   if (!appKey) {
@@ -159,8 +171,12 @@ export async function renderDashboard() {
     setTimeout(() => {
       window.dispatchEvent(new Event("resize"));
     }, 50);
+
+    stopRefresh();
+    refreshIntervalId = setTimeout(renderDashboard, refreshPeriod * 1000);
   } catch (error) {
     //console.error("Błąd podczas pobierania HTML dashboardu:", error);
+    stopRefresh();
     appContainer.innerHTML = `<div class="alert alert-danger">${t("error.dashboard")}</div>`;
   }
 }
@@ -169,6 +185,7 @@ export async function renderDashboard() {
  * Wyświetla stronę informacyjną o aplikacji i aktualnie wybranym pulpicie
  */
 export async function showAboutPage() {
+  stopRefresh();
   const did = localStorage.getItem("did") || "None";
   const appKey = localStorage.getItem("appKey");
 
