@@ -1,314 +1,81 @@
-document.addEventListener("DOMContentLoaded", function () {
-  // Słownik tłumaczeń
-  const i18n = {
-    pl: {
-      "nav.title": "Signomix Viewer Lite",
-      "nav.select": "Wybierz pulpit",
-      "nav.login": "Autoryzacja",
-      "nav.help": "Pomoc",
-      "nav.about": "O aplikacji",
-      "form.title": "Wprowadź klucz aplikacji",
-      "form.key": "Klucz aplikacji",
-      "form.submit": "Zatwierdź",
-      "footer.text": "© 2026 Signomix. Wszelkie prawa zastrzeżone.",
-      "error.key": "Błędny klucz aplikacji lub problem z serwerem.",
-      "error.network": "Wystąpił błąd podczas komunikacji z serwerem.",
-      "error.dashboard": "Wystąpił błąd podczas ładowania dashboardu.",
-      "form.select_dashboard": "Wybierz pulpit",
-      "form.dashboard": "Pulpit",
-      "form.show": "Wyświetl",
-      "error.fetch_dashboards":
-        "Wystąpił błąd podczas pobierania listy pulpitów.",
-    },
-    en: {
-      "nav.title": "Signomix Viewer Lite",
-      "nav.select": "Select dashboard",
-      "nav.login": "Authorization",
-      "nav.help": "Help",
-      "nav.about": "About",
-      "form.title": "Enter application key",
-      "form.key": "App Key",
-      "form.submit": "Submit",
-      "footer.text": "© 2026 Signomix. All rights reserved.",
-      "error.key": "Invalid application key or server problem.",
-      "error.network":
-        "Network error occurred while communicating with the server.",
-      "error.dashboard": "An error occurred while loading the dashboard.",
-      "form.select_dashboard": "Select dashboard",
-      "form.dashboard": "Dashboard",
-      "form.show": "Show",
-      "error.fetch_dashboards":
-        "An error occurred while fetching the dashboards list.",
-    },
-  };
+import { initI18n } from "./i18n.js";
+import {
+  showAppKeyForm,
+  selectDashboardForm,
+  renderDashboard,
+  showAboutPage,
+} from "./ui.js";
 
-  // Ustawienie początkowego języka
-  let currentLang = localStorage.getItem("appLang") || "pl";
-
-  // Funkcja zwracająca przetłumaczony tekst
-  function t(key) {
-    return i18n[currentLang][key] || key;
-  }
-
-  // Funkcja aktualizująca statyczne elementy HTML
-  function updateUI() {
-    document.querySelectorAll("[data-i18n]").forEach((el) => {
-      const key = el.getAttribute("data-i18n");
-      el.textContent = t(key);
-    });
-    document.documentElement.lang = currentLang;
-  }
-
-  // Wywołujemy aktualizację po załadowaniu strony
-  updateUI();
-
-  // Obsługa przycisku "Zaloguj się"
-  const loginButton = document.getElementById("menu-login");
-  if (loginButton) {
-    loginButton.addEventListener("click", function (e) {
-      e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Inicjalizacja mechanizmu tłumaczeń
+  // Callback odświeża formularz logowania, jeśli zostanie zmieniony język,
+  // a użytkownik nie jest jeszcze zalogowany.
+  initI18n((lang) => {
+    if (!localStorage.getItem("appKey")) {
       showAppKeyForm();
-
-      // Zwinięcie menu na urządzeniach mobilnych (jeśli jest rozwinięte)
-      const navbarCollapse = document.getElementById("navbarNav");
-      if (navbarCollapse && navbarCollapse.classList.contains("show")) {
-        const bsCollapse = new bootstrap.Collapse(navbarCollapse);
-        bsCollapse.hide();
-      }
-    });
-  }
-
-  // Obsługa przycisku "Wybierz pulpit"
-  const selectDashboardBtn = document.getElementById("menu-select-dashboard");
-  if (selectDashboardBtn) {
-    selectDashboardBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      selectDashboardForm();
-
-      // Zwinięcie menu na urządzeniach mobilnych
-      const navbarCollapse = document.getElementById("navbarNav");
-      if (navbarCollapse && navbarCollapse.classList.contains("show")) {
-        const bsCollapse = new bootstrap.Collapse(navbarCollapse);
-        bsCollapse.hide();
-      }
-    });
-  }
-
-  document.querySelectorAll(".lang-switch").forEach((btn) => {
-    btn.addEventListener("click", function (e) {
-      e.preventDefault();
-      currentLang = this.getAttribute("data-lang");
-      localStorage.setItem("appLang", currentLang);
-      updateUI();
-
-      // Jeśli jesteśmy na ekranie logowania, przerysujmy formularz
-      if (!localStorage.getItem("appKey")) {
-        showAppKeyForm();
-      }
-    });
+    }
+    closeMobileMenu();
   });
 
-  let appContainer = document.getElementById("app-container");
-  const serverUrl = window.location.origin;
-
-  // Pobierz parametr 'did' z URL
+  // 2. Pobierz parametr 'did' z adres URL
   const urlParams = new URLSearchParams(window.location.search);
-  const did = urlParams.get("did"); // dashboard ID
+  const did = urlParams.get("did");
   if (did) {
     localStorage.setItem("did", did);
   }
 
-  // Sprawdź, czy appKey istnieje w localStorage
-  let appKey = localStorage.getItem("appKey"); // application key
+  // 3. Logika startowa: decydujemy co pokazać użytkownikowi
+  const appKey = localStorage.getItem("appKey");
 
   if (!appKey) {
+    // Brak klucza = pokaż logowanie
     showAppKeyForm();
+  } else if (!localStorage.getItem("did")) {
+    // Mamy klucz, ale nie wiemy który pulpit pokazać
+    selectDashboardForm();
   } else {
-    fetchReports(appKey);
+    // Mamy klucz i ID pulpitu, więc od razu ładujemy dashboard
+    renderDashboard();
   }
 
-  function showAppKeyForm(errorMessage = null) {
-    appContainer.innerHTML = `
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="text-center">${t("form.title")}</h3>
-                        </div>
-                        <div class="card-body">
-                            ${errorMessage ? `<div class="alert alert-danger" role="alert">${errorMessage}</div>` : ""}
-                            <form id="appKeyForm">
-                                <div class="mb-3">
-                                    <label for="appKeyInput" class="form-label">${t("form.key")}</label>
-                                    <input type="text" class="form-control" id="appKeyInput" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100">${t("form.submit")}</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-    document
-      .getElementById("appKeyForm")
-      .addEventListener("submit", function (e) {
-        e.preventDefault();
-        const newAppKey = document.getElementById("appKeyInput").value;
-        localStorage.setItem("appKey", newAppKey);
-        fetchReports(newAppKey);
-      });
-  }
-
-  function fetchReports(newAppKey) {
-    const url = `${serverUrl}/api/reports/reports`;
-    fetch(url, {
-      headers: {
-        Authentication: newAppKey,
-      },
-    }).then((response) => {
-      if (response.ok) {
-        try {
-          // Zaczekaj na przetworzenie odpowiedzi jako JSON, aby sprawdzić status
-          response
-            .json()
-            .then((reports) => {
-              //console.log(JSON.stringify(reports));
-              if (reports.status == undefined) {
-                localStorage.setItem("appKey", newAppKey);
-                appKey = newAppKey;
-                fetchDashboard();
-              } else {
-                // np. status 401 unauthorized, 403 forbidden, 500 server error
-                showAppKeyForm(t("error.key"));
-              }
-            })
-            .catch((e) => {
-              // Błąd parsowania JSON
-              showAppKeyForm(t("error.key"));
-            });
-        } catch (e) {
-          showAppKeyForm(t("error.key"));
-        }
-      } else {
-        showAppKeyForm(t("error.key"));
-      }
+  // 4. Podpięcie zdarzeń do paska nawigacyjnego (górnego menu)
+  const loginButton = document.getElementById("menu-login");
+  if (loginButton) {
+    loginButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      showAppKeyForm();
+      closeMobileMenu();
     });
   }
 
-  function fetchDashboard() {
-    const did = localStorage.getItem("did");
-    const appKey = localStorage.getItem("appKey");
-    const url = `${serverUrl}/api/reports/page/${encodeURIComponent(did)}?title=false&header=false`;
-
-    fetch(url, {
-      headers: {
-        Authentication: appKey,
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.text();
-      })
-      .then((html) => {
-        // Po prostu wypełniamy STAŁY kontener z index.html pobranym kodem (bez niszczenia reszty)
-        appContainer.innerHTML = html.trim();
-
-        // Wymuszamy na przeglądarce przetworzenie świeżo wstawionego kodu i klas RWD.
-        // Wykonanie tego dla dokumentu na poziomie body upewnia, że reguły Media Queries "zaskoczą".
-        void document.body.offsetHeight;
-
-        // Powiadamiamy wszelkie skrypty lub wykresy, że rozmiar okna/kontenera się ustabilizował,
-        // co jest wymagane przy renderowaniu responsywnych wykresów w widokach mobilnych.
-        setTimeout(() => {
-          window.dispatchEvent(new Event("resize"));
-        }, 50);
-
-        console.log(
-          "Dashboard załadowany pomyślnie i odświeżony układ widoku.",
-        );
-      })
-      .catch((error) => {
-        console.error("Błąd podczas pobierania dashboardu:", error);
-        appContainer.innerHTML =
-          '<div class="alert alert-danger">${t("error.dashboard")}</div>';
-      });
+  const selectDashboardBtn = document.getElementById("menu-select-dashboard");
+  if (selectDashboardBtn) {
+    selectDashboardBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      selectDashboardForm();
+      closeMobileMenu();
+    });
   }
 
-  function selectDashboardForm() {
-    const appKey = localStorage.getItem("appKey");
+  const aboutBtn = document.getElementById("menu-about");
+  if (aboutBtn) {
+    aboutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      showAboutPage();
+      closeMobileMenu();
+    });
+  }
 
-    // Jeśli nie ma klucza, użytkownik musi się najpierw zalogować
-    if (!appKey) {
-      showAppKeyForm();
-      return;
+  // Funkcja pomocnicza: zwija menu typu "hamburger" na urządzeniach mobilnych po kliknięciu w opcję
+  function closeMobileMenu() {
+    const navbarCollapse = document.getElementById("navbarNav");
+    if (
+      navbarCollapse &&
+      navbarCollapse.classList.contains("show") &&
+      window.bootstrap
+    ) {
+      const bsCollapse = new window.bootstrap.Collapse(navbarCollapse);
+      bsCollapse.hide();
     }
-
-    const url = `${serverUrl}/api/core/v2/dashboards`;
-
-    fetch(url, {
-      headers: {
-        Authentication: appKey,
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboards");
-        }
-        return response.json();
-      })
-      .then((dashboards) => {
-        const savedDid = localStorage.getItem("did");
-        let optionsHtml = "";
-
-        // Budowanie opcji do selecta
-        dashboards.forEach((db) => {
-          const isSelected = db.id === savedDid ? "selected" : "";
-          optionsHtml += `<option value="${db.id}" ${isSelected}>${db.name}</option>`;
-        });
-
-        // Wyświetlenie formularza
-        appContainer.innerHTML = `
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="text-center">${t("form.select_dashboard")}</h3>
-                        </div>
-                        <div class="card-body">
-                            <form id="selectDashboardForm">
-                                <div class="mb-3">
-                                    <label for="dashboardSelect" class="form-label">${t("form.dashboard")}</label>
-                                    <select class="form-select" id="dashboardSelect" required>
-                                        ${optionsHtml}
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100">${t("form.show")}</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Obsługa zatwierdzenia wyboru
-        document
-          .getElementById("selectDashboardForm")
-          .addEventListener("submit", function (e) {
-            e.preventDefault();
-            const selectedDid =
-              document.getElementById("dashboardSelect").value;
-            localStorage.setItem("did", selectedDid);
-
-            // Pobierz i wyrenderuj wybrany pulpit
-            fetchDashboard();
-          });
-      })
-      .catch((error) => {
-        console.error("Błąd podczas pobierania listy pulpitów:", error);
-        appContainer.innerHTML = `<div class="alert alert-danger">${t("error.fetch_dashboards")}</div>`;
-      });
   }
 });
