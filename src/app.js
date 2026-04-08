@@ -14,6 +14,11 @@ document.addEventListener("DOMContentLoaded", function () {
       "error.key": "Błędny klucz aplikacji lub problem z serwerem.",
       "error.network": "Wystąpił błąd podczas komunikacji z serwerem.",
       "error.dashboard": "Wystąpił błąd podczas ładowania dashboardu.",
+      "form.select_dashboard": "Wybierz pulpit",
+      "form.dashboard": "Pulpit",
+      "form.show": "Wyświetl",
+      "error.fetch_dashboards":
+        "Wystąpił błąd podczas pobierania listy pulpitów.",
     },
     en: {
       "nav.title": "Signomix Viewer Lite",
@@ -29,6 +34,11 @@ document.addEventListener("DOMContentLoaded", function () {
       "error.network":
         "Network error occurred while communicating with the server.",
       "error.dashboard": "An error occurred while loading the dashboard.",
+      "form.select_dashboard": "Select dashboard",
+      "form.dashboard": "Dashboard",
+      "form.show": "Show",
+      "error.fetch_dashboards":
+        "An error occurred while fetching the dashboards list.",
     },
   };
 
@@ -60,6 +70,22 @@ document.addEventListener("DOMContentLoaded", function () {
       showAppKeyForm();
 
       // Zwinięcie menu na urządzeniach mobilnych (jeśli jest rozwinięte)
+      const navbarCollapse = document.getElementById("navbarNav");
+      if (navbarCollapse && navbarCollapse.classList.contains("show")) {
+        const bsCollapse = new bootstrap.Collapse(navbarCollapse);
+        bsCollapse.hide();
+      }
+    });
+  }
+
+  // Obsługa przycisku "Wybierz pulpit"
+  const selectDashboardBtn = document.getElementById("menu-select-dashboard");
+  if (selectDashboardBtn) {
+    selectDashboardBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      selectDashboardForm();
+
+      // Zwinięcie menu na urządzeniach mobilnych
       const navbarCollapse = document.getElementById("navbarNav");
       if (navbarCollapse && navbarCollapse.classList.contains("show")) {
         const bsCollapse = new bootstrap.Collapse(navbarCollapse);
@@ -208,6 +234,81 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Błąd podczas pobierania dashboardu:", error);
         appContainer.innerHTML =
           '<div class="alert alert-danger">${t("error.dashboard")}</div>';
+      });
+  }
+
+  function selectDashboardForm() {
+    const appKey = localStorage.getItem("appKey");
+
+    // Jeśli nie ma klucza, użytkownik musi się najpierw zalogować
+    if (!appKey) {
+      showAppKeyForm();
+      return;
+    }
+
+    const url = `${serverUrl}/api/core/v2/dashboards`;
+
+    fetch(url, {
+      headers: {
+        Authentication: appKey,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch dashboards");
+        }
+        return response.json();
+      })
+      .then((dashboards) => {
+        const savedDid = localStorage.getItem("did");
+        let optionsHtml = "";
+
+        // Budowanie opcji do selecta
+        dashboards.forEach((db) => {
+          const isSelected = db.id === savedDid ? "selected" : "";
+          optionsHtml += `<option value="${db.id}" ${isSelected}>${db.name}</option>`;
+        });
+
+        // Wyświetlenie formularza
+        appContainer.innerHTML = `
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="text-center">${t("form.select_dashboard")}</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="selectDashboardForm">
+                                <div class="mb-3">
+                                    <label for="dashboardSelect" class="form-label">${t("form.dashboard")}</label>
+                                    <select class="form-select" id="dashboardSelect" required>
+                                        ${optionsHtml}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">${t("form.show")}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Obsługa zatwierdzenia wyboru
+        document
+          .getElementById("selectDashboardForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            const selectedDid =
+              document.getElementById("dashboardSelect").value;
+            localStorage.setItem("did", selectedDid);
+
+            // Pobierz i wyrenderuj wybrany pulpit
+            fetchDashboard();
+          });
+      })
+      .catch((error) => {
+        console.error("Błąd podczas pobierania listy pulpitów:", error);
+        appContainer.innerHTML = `<div class="alert alert-danger">${t("error.fetch_dashboards")}</div>`;
       });
   }
 });
