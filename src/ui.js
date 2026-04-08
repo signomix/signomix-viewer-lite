@@ -5,6 +5,19 @@ const appContainer = document.getElementById("app-container");
 
 const refreshPeriod = 30; // Czas odświeżania w sekundach
 let refreshIntervalId = null;
+let currentView = "";
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    // Aplikacja schowana w tle - zatrzymujemy odliczanie
+    stopRefresh();
+  } else {
+    // Aplikacja wraca na ekran - jeśli jesteśmy na widoku pulpitu, odświeżamy natychmiast
+    if (currentView === "dashboard") {
+      renderDashboard();
+    }
+  }
+});
 
 function stopRefresh() {
   if (refreshIntervalId) {
@@ -18,6 +31,7 @@ function stopRefresh() {
  * Opcjonalnie z komunikatem o błędzie.
  */
 export function showAppKeyForm(errorMessage = null) {
+  currentView = "appKeyForm";
   stopRefresh();
   appContainer.innerHTML = `
       <div class="row justify-content-center">
@@ -83,6 +97,7 @@ export function showAppKeyForm(errorMessage = null) {
  * Odpytuje API o wszystkie dostępne dla danego klucza pulpity.
  */
 export async function selectDashboardForm() {
+  currentView = "selectDashboard";
   stopRefresh();
   const appKey = localStorage.getItem("appKey");
 
@@ -172,8 +187,13 @@ export async function renderDashboard() {
       window.dispatchEvent(new Event("resize"));
     }, 50);
 
+    currentView = "dashboard";
     stopRefresh();
-    refreshIntervalId = setTimeout(renderDashboard, refreshPeriod * 1000);
+
+    // Uruchamiamy odliczanie tylko wtedy, gdy aplikacja jest widoczna na ekranie
+    if (!document.hidden) {
+      refreshIntervalId = setTimeout(renderDashboard, refreshPeriod * 1000);
+    }
   } catch (error) {
     //console.error("Błąd podczas pobierania HTML dashboardu:", error);
     stopRefresh();
@@ -185,6 +205,7 @@ export async function renderDashboard() {
  * Wyświetla stronę informacyjną o aplikacji i aktualnie wybranym pulpicie
  */
 export async function showAboutPage() {
+  currentView = "aboutPage";
   stopRefresh();
   const did = localStorage.getItem("did") || "None";
   const appKey = localStorage.getItem("appKey");
