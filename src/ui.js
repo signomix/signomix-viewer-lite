@@ -120,11 +120,17 @@ export async function selectDashboardForm() {
         const selectedDid = document.getElementById("dashboardSelect").value;
         if (selectedDid) {
           localStorage.setItem("did", selectedDid);
+          let dName =
+            dashboards.find((db) => db.id === selectedDid)?.name || "Unknown";
+          localStorage.setItem("dName", dName);
+          let dTitle =
+            dashboards.find((db) => db.id === selectedDid)?.title || dName;
+          localStorage.setItem("dTitle", dTitle);
           renderDashboard();
         }
       });
   } catch (error) {
-    console.error("Błąd podczas pobierania listy pulpitów:", error);
+    //console.error("Błąd podczas pobierania listy pulpitów:", error);
     showAppKeyForm(t("error.fetch_dashboards")); // Opcjonalnie wyloguj, jeśli to wina złego appKey
   }
 }
@@ -154,7 +160,7 @@ export async function renderDashboard() {
       window.dispatchEvent(new Event("resize"));
     }, 50);
   } catch (error) {
-    console.error("Błąd podczas pobierania HTML dashboardu:", error);
+    //console.error("Błąd podczas pobierania HTML dashboardu:", error);
     appContainer.innerHTML = `<div class="alert alert-danger">${t("error.dashboard")}</div>`;
   }
 }
@@ -163,14 +169,31 @@ export async function renderDashboard() {
  * Wyświetla stronę informacyjną o aplikacji i aktualnie wybranym pulpicie
  */
 export async function showAboutPage() {
-  const did = localStorage.getItem("did") || "Brak";
+  const did = localStorage.getItem("did") || "None";
   const appKey = localStorage.getItem("appKey");
 
   let dbName = "Brak danych";
   let dbTitle = "Brak danych";
+  let appVersion = "Nieznana";
+
+  try {
+    const swResponse = await fetch("./service-worker.js");
+    if (swResponse.ok) {
+      const swText = await swResponse.text();
+      const match = swText.match(/const\s+CACHE_NAME\s*=\s*["']([^"']+)["']/);
+      if (match && match[1]) {
+        appVersion = match[1];
+      }
+    }
+  } catch (err) {
+    console.error(
+      "Nie udało się pobrać wersji aplikacji z service workera:",
+      err,
+    );
+  }
 
   // Jeśli użytkownik jest zalogowany i ma wybrany pulpit, próbujemy pobrać jego szczegóły
-  if (appKey && did !== "Brak") {
+  if (appKey && did !== "None") {
     try {
       const dashboards = await fetchDashboardsList(appKey);
       const currentDb = dashboards.find((db) => db.id === did);
@@ -183,10 +206,8 @@ export async function showAboutPage() {
     }
   }
 
-  const aboutText = `
-    <p><strong>Signomix Viewer Lite</strong> to lekka, bezpieczna aplikacja w architekturze PWA służąca do przeglądania pulpitów.</p>
-    <p>Została zaprojektowana z myślą o urządzeniach mobilnych oraz ograniczeniu przesyłania zbędnych danych.</p>
-  `;
+  const aboutText =
+    t("about.text") || "Brak dodatkowych informacji o aplikacji.";
 
   appContainer.innerHTML = `
     <div class="row justify-content-center mt-3">
@@ -206,7 +227,10 @@ export async function showAboutPage() {
                     </table>
 
                     <h5 class="border-bottom pb-2 mb-3" data-i18n="about.info">${t("about.info")}</h5>
-                    <div class="text-muted">
+                    <p class="mb-3">
+                        <strong data-i18n="about.version">${t("about.version")}</strong> ${appVersion}
+                    </p>
+                    <div class="text-muted" data-i18n="about.text">
                         ${aboutText}
                     </div>
                     <div class="mt-4 text-center">

@@ -23,6 +23,13 @@ export const dictionary = {
     "about.title": "Tytuł:",
     "about.info": "Informacje o aplikacji",
     "about.close": "Zamknij",
+    "about.version": "Wersja:",
+    "pwa.new_version": "Dostępna jest nowa wersja aplikacji PWA!",
+    "pwa.update_now": "Zaktualizuj teraz",
+    "about.text": `
+      <p><strong>Signomix Viewer</strong> to lekka aplikacja PWA służąca do przeglądania pulpitów platformy Signomix IoT.</p>
+      <p>Dokumentacja platformy Signomix IoT (w tym również regulamin) jest dostępna online na stronie <a href="https://documentation.signomix.com">https://documentation.signomix.com</a>.</p>
+    `,
   },
   en: {
     "nav.title": "Signomix Viewer Lite",
@@ -49,10 +56,17 @@ export const dictionary = {
     "about.title": "Title:",
     "about.info": "Application info",
     "about.close": "Close",
+    "about.version": "Version:",
+    "pwa.new_version": "A new version of the PWA is available!",
+    "pwa.update_now": "Update now",
+    "about.text": `
+      <p><strong>Signomix Viewer</strong> is a lightweight PWA application designed for viewing dashboards of the Signomix IoT platform.</p>
+      <p>The documentation for the Signomix IoT platform (including terms of use) is available online at <a href="https://documentation.signomix.com">https://documentation.signomix.com</a>.</p>
+    `,
   },
 };
 
-let currentLang = localStorage.getItem("appLang") || "pl";
+export let currentLang = localStorage.getItem("appLang") || "pl";
 
 export function t(key) {
   return dictionary[currentLang][key] || key;
@@ -61,7 +75,7 @@ export function t(key) {
 export function updateUI() {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
-    el.textContent = t(key);
+    el.innerHTML = t(key);
   });
   document.documentElement.lang = currentLang;
 }

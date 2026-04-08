@@ -1,11 +1,11 @@
 {
-  "name": "PWA Dashboard",
-  "short_name": "Dashboard",
+  "name": "Signomix viewer",
+  "short_name": "Viewer",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#007bff",
-  "description": "Aplikacja PWA z dashboardem",
+  "description": "Dashboard viewer for Signomix IoT platform",
   "icons": [
     {
       "src": "icons/icon-72x72.png",

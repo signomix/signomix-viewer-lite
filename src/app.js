@@ -1,4 +1,5 @@
 import { initI18n } from "./i18n.js";
+import { initPWA } from "./pwa.js";
 import {
   showAppKeyForm,
   selectDashboardForm,
@@ -7,6 +8,8 @@ import {
 } from "./ui.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  initPWA();
+
   // 1. Inicjalizacja mechanizmu tłumaczeń
   // Callback odświeża formularz logowania, jeśli zostanie zmieniony język,
   // a użytkownik nie jest jeszcze zalogowany.
