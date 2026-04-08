@@ -20,9 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
     closeMobileMenu();
   });
 
-  // 2. Pobierz parametr 'did' z adres URL
+  // 2. Pobierz parametr 'd' z adres URL
   const urlParams = new URLSearchParams(window.location.search);
-  const did = urlParams.get("did");
+  const did = urlParams.get("d"); // dashboard ID przekazany jako parametr URL ?d=12345
   if (did) {
     localStorage.setItem("did", did);
   }

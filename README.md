@@ -47,7 +47,7 @@ Twoja aplikacja będzie dostępna pod adresem: `http://localhost:8080`
 ## Użytkowanie
 
 Aby prawidłowo wywołać dany dashboard w przeglądarce, przekaż parametr `did` (Dashboard ID) w adresie URL, np:
-`http://localhost:8080/?did=MOJ_DASHBOARD_ID`
+`http://localhost:8080/?d=MY_DASHBOARD_ID`
 
 1. Przy pierwszym uruchomieniu aplikacja poprosi o wpisanie **klucza aplikacji (App Key)** w celu uwierzytelnienia.
 2. Po poprawnej autoryzacji klucz zostaje zapamiętany w lokalnej pamięci przeglądarki (`localStorage`), a następnie żądany dashboard zostanie pobrany i wyświetlony.

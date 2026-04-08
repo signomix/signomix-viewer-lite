@@ -1,4 +1,4 @@
-const CACHE_NAME = "signomix-viewer-v1g";
+const CACHE_NAME = "0.0.1";
 const urlsToCache = [
   "./",
   "./index.html",

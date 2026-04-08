@@ -16,7 +16,7 @@ export const dictionary = {
     "error.dashboard": "Wystąpił błąd podczas ładowania dashboardu.",
     "error.fetch_dashboards":
       "Wystąpił błąd podczas pobierania listy pulpitów.",
-    "footer.text": "© 2023 Signomix. Wszelkie prawa zastrzeżone.",
+    "footer.text": "© 2026 EXPERIOT",
     "about.current_dashboard": "Aktualny pulpit",
     "about.id": "ID:",
     "about.name": "Nazwa:",
@@ -49,7 +49,7 @@ export const dictionary = {
     "error.dashboard": "An error occurred while loading the dashboard.",
     "error.fetch_dashboards":
       "An error occurred while fetching the dashboards list.",
-    "footer.text": "© 2023 Signomix. All rights reserved.",
+    "footer.text": "© 2026 EXPERIOT",
     "about.current_dashboard": "Current dashboard",
     "about.id": "ID:",
     "about.name": "Name:",
