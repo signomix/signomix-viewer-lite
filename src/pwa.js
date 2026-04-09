@@ -25,6 +25,11 @@ export function initPWA() {
       });
     });
 
+    // Wymuś sprawdzenie nowej wersji przy każdym uruchomieniu PWA (np. z tła)
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.update();
+    });
+
     let refreshing;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (refreshing) return;

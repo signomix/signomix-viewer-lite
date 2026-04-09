@@ -60,3 +60,24 @@ export async function fetchDashboardHtml(did, appKey) {
 
   return await response.text();
 }
+
+/**
+ * Pobiera informacje o tokenie (w tym ID zalogowanego użytkownika).
+ * @param {string} appKey - Autoryzujący klucz aplikacji.
+ * @returns {Promise<Object>} - Zwraca obiekt JSON z danymi tokena.
+ */
+export async function fetchTokenInfo(appKey) {
+  const url = `${serverUrl}/api/auth/token/${appKey}`;
+  const response = await fetch(url);
+  console.log("Fetching token info from URL:", url);
+  if (!response.ok) {
+    console.log(
+      "Failed to fetch token info:",
+      response.status,
+      response.statusText,
+    );
+    throw new Error("Failed to fetch token info");
+  }
+
+  return await response.json();
+}

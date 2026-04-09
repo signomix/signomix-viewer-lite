@@ -1,5 +1,10 @@
 import { t } from "./i18n.js";
-import { checkAppKey, fetchDashboardsList, fetchDashboardHtml } from "./api.js";
+import {
+  checkAppKey,
+  fetchDashboardsList,
+  fetchDashboardHtml,
+  fetchTokenInfo,
+} from "./api.js";
 
 const appContainer = document.getElementById("app-container");
 
@@ -47,7 +52,10 @@ export function showAppKeyForm(errorMessage = null) {
                               <label for="appKeyInput" class="form-label fw-bold">${t("form.key")}</label>
                               <input type="text" class="form-control" id="appKeyInput" required>
                           </div>
-                          <button type="submit" class="btn btn-primary w-100">${t("form.submit")}</button>
+                          <div class="d-flex gap-2">
+                              <button type="submit" class="btn btn-primary w-100">${t("form.submit")}</button>
+                              <button type="button" class="btn btn-secondary w-100" id="cancelAppKeyBtn">${t("form.cancel")}</button>
+                          </div>
                       </form>
                   </div>
               </div>
@@ -90,6 +98,13 @@ export function showAppKeyForm(errorMessage = null) {
         showAppKeyForm(t("error.network"));
       }
     });
+
+  const cancelBtn = document.getElementById("cancelAppKeyBtn");
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      renderDashboard();
+    });
+  }
 }
 
 /**
@@ -132,7 +147,10 @@ export async function selectDashboardForm() {
                                   ${optionsHtml}
                               </select>
                           </div>
-                          <button type="submit" class="btn btn-primary w-100">${t("form.show")}</button>
+                          <div class="d-flex gap-2">
+                              <button type="submit" class="btn btn-primary w-100">${t("form.show")}</button>
+                              <button type="button" class="btn btn-secondary w-100" id="cancelSelectBtn">${t("form.cancel")}</button>
+                          </div>
                       </form>
                   </div>
               </div>
@@ -156,6 +174,13 @@ export async function selectDashboardForm() {
           renderDashboard();
         }
       });
+
+    const cancelSelectBtn = document.getElementById("cancelSelectBtn");
+    if (cancelSelectBtn) {
+      cancelSelectBtn.addEventListener("click", () => {
+        renderDashboard();
+      });
+    }
   } catch (error) {
     //console.error("Błąd podczas pobierania listy pulpitów:", error);
     showAppKeyForm(t("error.fetch_dashboards")); // Opcjonalnie wyloguj, jeśli to wina złego appKey
@@ -213,6 +238,19 @@ export async function showAboutPage() {
   let dbName = "Brak danych";
   let dbTitle = "Brak danych";
   let appVersion = "Nieznana";
+  let userId = "Nieznane";
+
+  if (appKey) {
+    try {
+      const tokenInfo = await fetchTokenInfo(appKey);
+      console.log("Token info:", tokenInfo);
+      if (tokenInfo && tokenInfo.uid) {
+        userId = tokenInfo.uid;
+      }
+    } catch (err) {
+      console.error("Nie udało się pobrać informacji o użytkowniku:", err);
+    }
+  }
 
   try {
     const swResponse = await fetch("./service-worker.js");
@@ -258,15 +296,16 @@ export async function showAboutPage() {
                     <h5 class="border-bottom pb-2 mb-3" data-i18n="about.current_dashboard">${t("about.current_dashboard")}</h5>
                     <table class="table table-borderless table-sm mb-4">
                         <tbody>
-                            <tr><th scope="row" style="width: 20%;" data-i18n="about.id">${t("about.id")}</th><td>${did}</td></tr>
+                            <tr><th scope="row" style="width: 25%;" data-i18n="about.id">${t("about.id")}</th><td>${did}</td></tr>
                             <tr><th scope="row" data-i18n="about.name">${t("about.name")}</th><td>${dbName}</td></tr>
                             <tr><th scope="row" data-i18n="about.title">${t("about.title")}</th><td>${dbTitle}</td></tr>
-                        </tbody>
+                            <tr><th scope="row" data-i18n="about.user_id">${t("about.user_id")}</th><td>${userId}</td></tr>
+                     </tbody>
                     </table>
 
                     <h5 class="border-bottom pb-2 mb-3" data-i18n="about.info">${t("about.info")}</h5>
                     <p class="mb-3">
-                        <strong data-i18n="about.version">${t("about.version")}</strong> ${appVersion}
+                        <strong data-i18n="about.version">${t("about.version")}</strong> ${appVersion}<br>
                     </p>
                     <div class="text-muted" data-i18n="about.text">
                         ${aboutText}

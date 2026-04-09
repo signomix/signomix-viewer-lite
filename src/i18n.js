@@ -8,6 +8,7 @@ export const dictionary = {
     "form.title": "Wprowadź klucz aplikacji",
     "form.key": "Klucz aplikacji",
     "form.submit": "Zatwierdź",
+    "form.cancel": "Anuluj",
     "form.select_dashboard": "Wybierz pulpit",
     "form.dashboard": "Pulpit",
     "form.show": "Wyświetl",
@@ -24,6 +25,7 @@ export const dictionary = {
     "about.info": "Informacje o aplikacji",
     "about.close": "Zamknij",
     "about.version": "Wersja:",
+    "about.user_id": "Użytkownik:",
     "pwa.new_version": "Dostępna jest nowa wersja aplikacji PWA!",
     "pwa.update_now": "Zaktualizuj teraz",
     "about.text": `
@@ -40,6 +42,7 @@ export const dictionary = {
     "form.title": "Enter application key",
     "form.key": "App Key",
     "form.submit": "Submit",
+    "form.cancel": "Cancel",
     "form.select_dashboard": "Select dashboard",
     "form.dashboard": "Dashboard",
     "form.show": "Show",
@@ -57,6 +60,7 @@ export const dictionary = {
     "about.info": "Application info",
     "about.close": "Close",
     "about.version": "Version:",
+    "about.user_id": "User:",
     "pwa.new_version": "A new version of the PWA is available!",
     "pwa.update_now": "Update now",
     "about.text": `
