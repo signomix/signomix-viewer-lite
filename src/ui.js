@@ -31,6 +31,19 @@ function stopRefresh() {
   }
 }
 
+export function updateMenuState() {
+  const loginBtn = document.getElementById("menu-login");
+  if (loginBtn) {
+    if (localStorage.getItem("appKey")) {
+      loginBtn.setAttribute("data-i18n", "nav.account");
+      loginBtn.textContent = t("nav.account");
+    } else {
+      loginBtn.setAttribute("data-i18n", "nav.login");
+      loginBtn.textContent = t("nav.login");
+    }
+  }
+}
+
 /**
  * Wyświetla formularz logowania (wymaga podania appKey).
  * Opcjonalnie z komunikatem o błędzie.
@@ -38,25 +51,39 @@ function stopRefresh() {
 export function showAppKeyForm(errorMessage = null) {
   currentView = "appKeyForm";
   stopRefresh();
+
+  const appKey = localStorage.getItem("appKey");
+  const titleKey = appKey ? "form.account_title" : "form.title";
+
   appContainer.innerHTML = `
       <div class="row justify-content-center">
           <div class="col-md-6">
               <div class="card shadow-sm">
                   <div class="card-header bg-primary text-white">
-                      <h3 class="text-center mb-0">${t("form.title")}</h3>
+                      <h3 class="text-center mb-0" data-i18n="${titleKey}">${t(titleKey)}</h3>
                   </div>
                   <div class="card-body">
                       ${errorMessage ? `<div class="alert alert-danger" role="alert">${errorMessage}</div>` : ""}
                       <form id="appKeyForm">
                           <div class="mb-3">
-                              <label for="appKeyInput" class="form-label fw-bold">${t("form.key")}</label>
-                              <input type="text" class="form-control" id="appKeyInput" required>
+                              <label for="appKeyInput" class="form-label fw-bold" data-i18n="form.key">${t("form.key")}</label>
+                              <input type="text" class="form-control" id="appKeyInput" required >
                           </div>
                           <div class="d-flex gap-2">
-                              <button type="submit" class="btn btn-primary w-100">${t("form.submit")}</button>
-                              <button type="button" class="btn btn-secondary w-100" id="cancelAppKeyBtn">${t("form.cancel")}</button>
+                              <button type="submit" class="btn btn-primary w-100" data-i18n="form.submit">${t("form.submit")}</button>
+                              <button type="button" class="btn btn-secondary w-100" id="cancelAppKeyBtn" data-i18n="form.cancel">${t("form.cancel")}</button>
                           </div>
                       </form>
+                      ${
+                        appKey
+                          ? `
+                      <hr class="mt-4">
+                      <div class="mt-3">
+                          <button type="button" class="btn btn-danger w-100" id="logoutBtn" data-i18n="form.logout">${t("form.logout")}</button>
+                      </div>
+                      `
+                          : ""
+                      }
                   </div>
               </div>
           </div>
@@ -78,6 +105,7 @@ export function showAppKeyForm(errorMessage = null) {
           console.log(JSON.stringify(reports));
           if (reports.status === undefined) {
             localStorage.setItem("appKey", newAppKey);
+            updateMenuState();
 
             // Jeśli mamy już jakieś zapisane ID, wyrenderuj od razu pulpit,
             // w przeciwnym razie wyświetl listę wyboru pulpitów
@@ -103,6 +131,18 @@ export function showAppKeyForm(errorMessage = null) {
   if (cancelBtn) {
     cancelBtn.addEventListener("click", () => {
       renderDashboard();
+    });
+  }
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("appKey");
+      localStorage.removeItem("dName");
+      localStorage.removeItem("dTitle");
+      localStorage.removeItem("did");
+      updateMenuState();
+      showAppKeyForm();
     });
   }
 }

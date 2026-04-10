@@ -5,10 +5,12 @@ import {
   selectDashboardForm,
   renderDashboard,
   showAboutPage,
+  updateMenuState,
 } from "./ui.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initPWA();
+  updateMenuState();
 
   // 1. Inicjalizacja mechanizmu tłumaczeń
   // Callback odświeża formularz logowania, jeśli zostanie zmieniony język,
