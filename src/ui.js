@@ -33,15 +33,27 @@ function stopRefresh() {
 
 export function updateMenuState() {
   const loginBtn = document.getElementById("menu-login");
-  if (loginBtn) {
-    if (localStorage.getItem("appKey")) {
-      loginBtn.setAttribute("data-i18n", "nav.account");
-      loginBtn.textContent = t("nav.account");
-    } else {
+  const logoutItem = document.getElementById("nav-item-logout");
+  if (localStorage.getItem("appKey")) {
+    if (loginBtn) loginBtn.parentElement.style.display = "none";
+    if (logoutItem) logoutItem.style.display = "block";
+  } else {
+    if (loginBtn) {
+      loginBtn.parentElement.style.display = "block";
       loginBtn.setAttribute("data-i18n", "nav.login");
       loginBtn.textContent = t("nav.login");
     }
+    if (logoutItem) logoutItem.style.display = "none";
   }
+}
+
+export function logout() {
+  localStorage.removeItem("appKey");
+  localStorage.removeItem("dName");
+  localStorage.removeItem("dTitle");
+  localStorage.removeItem("did");
+  updateMenuState();
+  showAppKeyForm();
 }
 
 /**
@@ -74,16 +86,6 @@ export function showAppKeyForm(errorMessage = null) {
                               <button type="button" class="btn btn-secondary w-100" id="cancelAppKeyBtn" data-i18n="form.cancel">${t("form.cancel")}</button>
                           </div>
                       </form>
-                      ${
-                        appKey
-                          ? `
-                      <hr class="mt-4">
-                      <div class="mt-3">
-                          <button type="button" class="btn btn-danger w-100" id="logoutBtn" data-i18n="form.logout">${t("form.logout")}</button>
-                      </div>
-                      `
-                          : ""
-                      }
                   </div>
               </div>
           </div>
@@ -133,18 +135,6 @@ export function showAppKeyForm(errorMessage = null) {
       renderDashboard();
     });
   }
-
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("appKey");
-      localStorage.removeItem("dName");
-      localStorage.removeItem("dTitle");
-      localStorage.removeItem("did");
-      updateMenuState();
-      showAppKeyForm();
-    });
-  }
 }
 
 /**
@@ -168,7 +158,8 @@ export async function selectDashboardForm() {
     let optionsHtml = "";
     dashboards.forEach((db) => {
       const isSelected = db.id === savedDid ? "selected" : "";
-      optionsHtml += `<option value="${db.id}" ${isSelected}>${db.name}</option>`;
+      const displayTitle = db.title || db.name || db.id;
+      optionsHtml += `<option value="${db.id}" ${isSelected}>${displayTitle}</option>`;
     });
 
     appContainer.innerHTML = `
@@ -264,6 +255,66 @@ export async function renderDashboard() {
     stopRefresh();
     appContainer.innerHTML = `<div class="alert alert-danger">${t("error.dashboard")}</div>`;
   }
+}
+
+/**
+ * Wyświetla formularz konfiguracji (wybór strefy czasowej).
+ */
+export function showConfigForm() {
+  currentView = "configForm";
+  stopRefresh();
+
+  const savedTimezone =
+    localStorage.getItem("timezone") ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timezones = Intl.supportedValuesOf
+    ? Intl.supportedValuesOf("timeZone")
+    : [savedTimezone, "UTC"];
+
+  let optionsHtml = "";
+  timezones.forEach((tz) => {
+    const isSelected = tz === savedTimezone ? "selected" : "";
+    optionsHtml += `<option value="${tz}" ${isSelected}>${tz}</option>`;
+  });
+
+  appContainer.innerHTML = `
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="text-center mb-0" data-i18n="form.config_title">${t("form.config_title")}</h3>
+                </div>
+                <div class="card-body">
+                    <form id="configForm">
+                        <div class="mb-3">
+                            <label for="timezoneSelect" class="form-label fw-bold" data-i18n="form.timezone">${t("form.timezone")}</label>
+                            <select class="form-select" id="timezoneSelect" required>
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100" data-i18n="form.save">${t("form.save")}</button>
+                            <button type="button" class="btn btn-secondary w-100" id="cancelConfigBtn" data-i18n="form.cancel">${t("form.cancel")}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+  `;
+
+  document
+    .getElementById("configForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      const selectedTz = document.getElementById("timezoneSelect").value;
+      localStorage.setItem("timezone", selectedTz);
+      renderDashboard();
+    });
+
+  document.getElementById("cancelConfigBtn").addEventListener("click", () => {
+    renderDashboard();
+  });
 }
 
 /**

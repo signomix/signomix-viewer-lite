@@ -6,6 +6,8 @@ import {
   renderDashboard,
   showAboutPage,
   updateMenuState,
+  logout,
+  showConfigForm,
 } from "./ui.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -49,6 +51,24 @@ document.addEventListener("DOMContentLoaded", () => {
     loginButton.addEventListener("click", (e) => {
       e.preventDefault();
       showAppKeyForm();
+      closeMobileMenu();
+    });
+  }
+
+  const logoutButton = document.getElementById("menu-logout");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      logout();
+      closeMobileMenu();
+    });
+  }
+
+  const configButton = document.getElementById("menu-config");
+  if (configButton) {
+    configButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      showConfigForm();
       closeMobileMenu();
     });
   }

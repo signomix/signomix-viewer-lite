@@ -47,7 +47,11 @@ export async function fetchDashboardsList(appKey) {
  * @returns {Promise<string>} - Zwraca kod HTML widoku pulpitu.
  */
 export async function fetchDashboardHtml(did, appKey) {
-  const url = `${serverUrl}/api/reports/page/${encodeURIComponent(did)}?title=false&header=false`;
+  let url = `${serverUrl}/api/reports/page/${encodeURIComponent(did)}?title=false&header=false`;
+  const tz = localStorage.getItem("timezone");
+  if (tz) {
+    url += `&tz=${encodeURIComponent(tz)}`;
+  }
   const response = await fetch(url, {
     headers: {
       Authentication: appKey,
