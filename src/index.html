@@ -65,8 +65,12 @@
                 width: 100%;
             }
 
-            /* Custom 10-column grid for desktop */
-            @media (min-width: 768px) {
+            /*
+               Siatka 10-kolumnowa zostaje włączona, gdy:
+               - urządzenie jest w trybie poziomym (smartfon obrócony, tablet)
+               - LUB rozdzielczość przekracza 1024px (tradycyjne monitory desktopowe)
+            */
+            @media (orientation: landscape), (min-width: 1024px) {
                 .col-10-1 {
                     width: 10%;
                 }
@@ -96,6 +100,51 @@
                 }
                 .col-10-10 {
                     width: 100%;
+                }
+            }
+            /* Poprawki dla drukowania - Fix dla Firefox/Chrome przy flexbox i vh-100 */
+            @media print {
+                @page {
+                    margin: 10mm;
+                    @bottom-right {
+                        content: "https://signomix.com";
+                        font-size: 8pt;
+                        color: #666;
+                        font-family: sans-serif;
+                    }
+                }
+                nav.navbar {
+                    display: none !important;
+                }
+                /* Całkowite wyłączenie Flexboxa dla tagów <html> i <body> */
+                html,
+                body.d-flex.vh-100.overflow-hidden {
+                    display: block !important;
+                    height: auto !important;
+                    min-height: auto !important;
+                    overflow: visible !important;
+                    position: static !important;
+                }
+
+                /* Usunięcie flexboxa i przewijania z głównego kontenera */
+                main#main-content {
+                    display: block !important;
+                    overflow: visible !important;
+                    height: auto !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    padding-top: 18px !important; /* Margines na górną ramkę i cień dla pierwszego wiersza kart */
+                }
+
+                /* Odpinamy stopkę od dołu ekranu */
+                footer {
+                    display: none !important;
+                }
+
+                /* Unikamy ucinania kart widżetów w połowie strony */
+                .widget-card {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
                 }
             }
         </style>
@@ -202,7 +251,7 @@
         <!-- Główna zawartość, przewijalna w pionie.
                     Używamy py-4 (padding) zamiast mt-4 mb-4 (margin), aby ujemne marginesy siatki Bootstrapa nie były obcinane przez overflow-auto -->
         <main class="py-4 flex-grow-1 overflow-auto" id="main-content">
-            <div class="container" id="app-container">
+            <div class="container-fluid" id="app-container">
                 <!-- Tutaj będzie wstawiany dashboard lub formularz -->
             </div>
         </main>
@@ -211,7 +260,7 @@
         <footer
             class="bg-light py-3 mt-auto flex-shrink-0 border-top text-center text-muted"
         >
-            <div class="container">
+            <div class="container-fluid">
                 <small data-i18n="footer.text">&copy; 2026 EXPERIOT.</small>
             </div>
         </footer>

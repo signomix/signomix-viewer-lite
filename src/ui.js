@@ -219,6 +219,130 @@ export async function selectDashboardForm() {
 }
 
 /**
+ * Funkcja przeznaczona do wywoływania z poziomu wygenerowanych widgetów (np. przycisków) w celu wysłania komendy do backendu.
+ * Obecnie jest to tylko szkielet, który można rozbudować o dodatkowe parametry (np. payload) i obsługę odpowiedzi.
+ * @param {*} command
+ */
+export function sendCommandCallback(command) {
+  showModalAlert(
+    "Not implemented yet",
+    t("error.warning") || "Ostrzeżenie",
+    "warning",
+  );
+}
+
+export function cancelCallback(command) {
+  showModalAlert("Cancelled!", t("error.warning") || "Ostrzeżenie", "info");
+}
+
+/**
+ * Funkcja wyświetlająca modal z komunikatem nałożony na całą stronę.
+ * Przeznaczona do prezentowania błędów lub ostrzeżeń bez niszczenia bieżącego widoku (np. wyrenderowanego pulpitu).
+ *
+ * @param {string} message - Treść komunikatu do wyświetlenia
+ * @param {string} title - Opcjonalny tytuł okienka modalnego
+ * @param {string} type - Typ komunikatu (np. "error", "warning", "info") - można wykorzystać do stylizacji modalnego okienka
+ */
+export function showModalAlert(message, title = "Informacja", type = "info") {
+  // Usuwamy ewentualnie istniejące już okno, aby nie mnożyć ich w DOM
+  const existingAlert = document.getElementById("app-modal-alert");
+  if (existingAlert) existingAlert.remove();
+
+  let headerClass = "bg-info text-white";
+  if (type === "warning") {
+    headerClass = "bg-warning text-dark";
+  } else if (type === "error") {
+    headerClass = "bg-danger text-white";
+  } else if (type === "success") {
+    headerClass = "bg-success text-white";
+  }
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "app-modal-alert";
+  dialog.className = "card shadow-lg";
+  dialog.style.cssText =
+    "border: none; border-radius: 8px; padding: 0; max-width: 450px; width: 90%; z-index: 9999; height: min-content; margin: auto; overflow: hidden;";
+
+  dialog.innerHTML = `
+    <div class="card-header ${headerClass} fw-bold">
+        <h5 class="mb-0">${title}</h5>
+    </div>
+    <div class="card-body text-center">
+        <p class="mb-4 mt-2">${message}</p>
+        <button id="app-modal-alert-close" class="btn btn-secondary w-100">${t("form.close") || "Zamknij"}</button>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  document
+    .getElementById("app-modal-alert-close")
+    .addEventListener("click", () => {
+      dialog.close();
+      dialog.remove();
+    });
+
+  dialog.showModal();
+}
+
+/**
+ * Renderuje wybrany pulpit na podstawie przekazanego ID, bez pokazywania formularza wyboru.
+ * Funkcja zaprojektowana do użytku wewnątrz samego dashboardu (np. z przycisków lub linków).
+ *
+ * @param {string} dashboardId - ID pulpitu do wyrenderowania
+ */
+export async function selectDashboardCallback(dashboardId) {
+  if (!dashboardId) {
+    console.error("Brak ID pulpitu w wywołaniu selectDashboardCallback");
+    showModalAlert(
+      "Brak ID pulpitu w wywołaniu",
+      t("error.title") || "Błąd",
+      "error",
+    );
+    return;
+  }
+
+  const appKey = localStorage.getItem("appKey");
+  if (!appKey) {
+    return showAppKeyForm();
+  }
+
+  // Pobranie listy, żeby zapisać również nazwę i tytuł nowo wybranego pulpitu
+  try {
+    const dashboards = await fetchDashboardsList(appKey);
+    const selectedDb = dashboards.find(
+      (db) => String(db.id) === String(dashboardId),
+    );
+    if (selectedDb) {
+      localStorage.setItem("did", dashboardId);
+      localStorage.setItem("dName", selectedDb.name || "Unknown");
+      localStorage.setItem(
+        "dTitle",
+        selectedDb.title || selectedDb.name || "Unknown",
+      );
+
+      // Zaktualizuj widok
+      renderDashboard();
+    } else {
+      const warningMsg = `Pulpit o ID "${dashboardId}" nie został znaleziony lub nie masz do niego dostępu.`;
+      console.warn(warningMsg);
+      showModalAlert(
+        warningMsg,
+        t("error.warning") || "Ostrzeżenie",
+        "warning",
+      );
+    }
+  } catch (error) {
+    console.error("Błąd podczas pobierania informacji o pulpicie:", error);
+    showModalAlert(
+      "Wystąpił błąd sieci lub serwera podczas weryfikacji pulpitu.",
+      t("error.title") || "Błąd sieci",
+      "error",
+    );
+  }
+}
+
+/**
  * Renderuje wybrany pulpit (dashboard) na cały ekran (appContainer).
  */
 export async function renderDashboard() {
@@ -242,6 +366,11 @@ export async function renderDashboard() {
     setTimeout(() => {
       window.dispatchEvent(new Event("resize"));
     }, 50);
+
+    // Udostępniamy funkcję w globalnym obiekcie window, aby wygenerowane widgety mogły z niej łatwo korzystać
+    window.selectDashboardCallback = selectDashboardCallback;
+    window.sendCommandCallback = sendCommandCallback;
+    window.cancelCallback = cancelCallback;
 
     currentView = "dashboard";
     stopRefresh();
